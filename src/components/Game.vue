@@ -15,7 +15,7 @@
         @click="changeField"
       ></div>
       <div
-        :class="{four_field:true, ield_choose:this.queue[queue.length-1] == 4}"
+        :class="{four_field:true, field_choose:this.queue[queue.length-1] == 4}"
         @click="changeField"
       ></div>
     </div>
@@ -56,8 +56,11 @@ export default {
       this.playGame();
     },
     playGame(min = 1, max = 4) {
+      let firstElem;
+      let track = new Audio();
+      track.pause();
       const some = this;
-      for (let i = 0; i < 10; i++) {
+      for (let i = 0; i < 5; i++) {
         new Promise(function (resolve) {
           setTimeout(
             () =>
@@ -66,23 +69,62 @@ export default {
                   Math.floor(Math.random() * (max - min + 1)) + min
                 )
               ),
-            200 * i
+            1400 * i
           );
         })
           .then(function () {
-            setTimeout(() => some.queue.push("trash"), 100);
+            setTimeout(() => some.queue.push("trash"), 500);
             console.log(some.queue);
+            if (i == 4) {
+              some.queue.splice(0, 0, firstElem);
+            }
           })
           .then(function () {
-            some.queue.splice(i - 1, 1);
+            if (some.queue.length == 1) {
+              firstElem = some.queue[0];
+              setTimeout(
+                () => some.queue.splice(some.queue.indexOf("trash"), 1),
+                450
+              );
+            } else setTimeout(() => some.queue.splice(some.queue.indexOf("trash"), 1));
+          })
+          .then(function () {
+            track = new Audio(
+              "http://soundbible.com/mp3/Air Plane Ding-SoundBible.com-496729130.mp3"
+            );
+            track.play();
           });
       }
     },
     changeField(e) {
       var el = e.target;
-      // Просто смотрю что выбрал и меняю шаг
       console.log(el.className);
-
+      // Просто смотрю что выбрал и меняю шаг
+      if (el.className == "one_field") {
+        let track = new Audio(
+          "http://soundbible.com/mp3/Air Plane Ding-SoundBible.com-496729130.mp3"
+        );
+        track.play();
+        console.log(this.queue);
+      }
+      if (el.className == "two_field") {
+        let track = new Audio(
+          "http://soundbible.com/mp3/Computer Error Alert-SoundBible.com-783113881.mp3"
+        );
+        track.play();
+      }
+      if (el.className == "three_field") {
+        let track = new Audio(
+          "http://soundbible.com/mp3/Electronic_Chime-KevanGC-495939803.mp3"
+        );
+        track.play();
+      }
+      if (el.className == "four_field") {
+        let track = new Audio(
+          "http://soundbible.com/mp3/Elevator Ding-SoundBible.com-685385892.mp3"
+        );
+        track.play();
+      }
     },
   },
 };
@@ -138,9 +180,9 @@ export default {
   opacity: 0.6;
 }
 
-.stop_click {
+/* .stop_click {
   pointer-events: none;
-}
+} */
 
 .one_field:active,
 .two_field:active,
