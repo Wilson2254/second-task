@@ -1,13 +1,15 @@
 <template>
   <div class="main">
-    <h1>Раунд: {{this.rounds}}</h1>
+    <div>Саймон говорит</div>
+    <div v-if="gameOver" class="loseGame">Вы проиграли</div>
+    <div>Раунд: {{this.rounds}} </div>
     <div class="fields">
       <div
         :class="{one_field:true, field_choose:this.queue[queue.length-1] == 1, stop_click: isPlay}"
         @click.prevent="changeField"
       ></div>
       <div
-        :class="{two_field:true,field_choose:this.queue[queue.length-1] == 2, stop_click: isPlay}"
+        :class="{two_field:true, field_choose:this.queue[queue.length-1] == 2, stop_click: isPlay}"
         @click="changeField"
       ></div>
       <div
@@ -20,17 +22,17 @@
       ></div>
     </div>
     <div class="controls">
-      <a class="button8" @click="startGame" :class="{stop_click: isGame}">Старт</a>
-      <h2>Режим: {{this.mode}}</h2>
+      <a class="button8" @click="startGame" :class="{isGameNow: isGame}">Старт</a>
+      <div>Режим: {{getDiff}}</div>
       <div class="mode">
-        <form :class="{stop_click: isGame}">
-          <input type="radio" value="Легкий" name="modeChoose" v-model="mode" />
+        <form :class="{isGameNow: isGame}">
+          <input type="radio" value="1" name="modeChoose" v-model="mode" />
           <label for="lightMode">Легкий</label>
 
-          <input type="radio" value="Средний" name="modeChoose" v-model="mode" />
+          <input type="radio" value="2" name="modeChoose" v-model="mode" />
           <label for="mediumMode">Средний</label>
 
-          <input type="radio" value="Сложный" name="modeChoose" v-model="mode" />
+          <input type="radio" value="3" name="modeChoose" v-model="mode" />
           <label for="hardMode">Сложный</label>
         </form>
       </div>
@@ -43,123 +45,129 @@ export default {
   data() {
     return {
       rounds: 0,
-      mode: "Легкий",
+      mode: 1,
       queue: [],
       supportQueue: [Math.floor(Math.random() * (4 - 1 + 1)) + 1],
       isGame: false,
       isPlay: false,
+      sounds: {
+        one: require("../sounds/1.mp3"),
+        two: require("../sounds/2.mp3"),
+        three: require("../sounds/3.mp3"),
+        four: require("../sounds/4.mp3"),
+      },
+      gameOver: false
     };
   },
   methods: {
+    
     startGame() {
+      this.gameOver = false;
       this.isGame = true;
-      this.isPlay = false;
+      this.isPlay = true;
       this.rounds++;
-      this.playGame();
+      setTimeout(() => this.playGame(), this.mode == 1 ? 1500  : this.mode == 2 ? 1000  : 400);
     },
+
     playGame() {
       let firstElem = this.supportQueue[0];
-      let track = new Audio();
       const some = this;
       for (let i = 0; i < some.rounds; i++) {
         new Promise(function (resolve) {
           setTimeout(
             () => resolve(some.queue.push(some.supportQueue.shift())),
-            1400 * i
+            some.mode == 1 ? 1500 * i : some.mode == 2 ? 1000 * i : 400 * i
           );
         })
           .then(function () {
-            setTimeout(() => some.queue.push("trash"), 500);
-            console.log(some.queue);
+            if (some.queue[i] == 1) new Audio(some.sounds.one).play();
+            if (some.queue[i] == 2) new Audio(some.sounds.two).play();
+            if (some.queue[i] == 3) new Audio(some.sounds.three).play();
+            if (some.queue[i] == 4) new Audio(some.sounds.four).play();
+            setTimeout(
+              () => some.queue.push("trash"),
+              some.mode == 1 ? 700 : some.mode == 2 ? 400 : 200
+            );
             if (i == some.rounds - 1) {
               some.queue.splice(0, 0, firstElem);
-              // some.isPlay = false;
+              some.isPlay = false;
             }
           })
           .then(function () {
             if (some.queue.length == 1) {
               setTimeout(
                 () => some.queue.splice(some.queue.indexOf("trash"), 1),
-                450
+                some.mode == 1 ? 650 : some.mode == 2 ? 350 : 150
               );
             } else setTimeout(() => some.queue.splice(some.queue.indexOf("trash"), 1));
-          })
-          .then(function () {
-            track = new Audio(
-              "http://soundbible.com/mp3/Air Plane Ding-SoundBible.com-496729130.mp3"
-            );
-            track.play();
           });
       }
     },
+
     changeField(e) {
-      // if (this.queue[0] == undefined) this.queue.shift();
       var el = e.target;
-      console.log(el.className);
-      if (el.className == "one_field") {
-        let track = new Audio(
-          "http://soundbible.com/mp3/Air Plane Ding-SoundBible.com-496729130.mp3"
-        );
-        track.play();
-        this.supportQueue.push(this.queue.shift());
-        console.log(this.supportQueue);
-        console.log(this.queue);
-        if (this.supportQueue[this.supportQueue.length - 1] == 1)
-          console.log("1");
-        if (this.queue[0] == "trash") {
-          this.supportQueue.push(Math.floor(Math.random() * (4 - 1 + 1)) + 1);
-          this.queue.shift();
-          this.startGame();
+
+      if (this.queue.length) {
+        if (el.className == "one_field") {
+          new Audio(this.sounds.one).play();
+          this.supportQueue.push(this.queue.shift());
+          this.supportQueue[this.supportQueue.length - 1] == 1
+            ? this.nextColor()
+            : this.loseGame();
         }
-      }
-      if (el.className == "two_field") {
-        let track = new Audio(
-          "http://soundbible.com/mp3/Computer Error Alert-SoundBible.com-783113881.mp3"
-        );
-        track.play();
-        this.supportQueue.push(this.queue.shift());
-        console.log(this.supportQueue);
-        console.log(this.queue);
-        if (this.supportQueue[this.supportQueue.length - 1] == 2)
-          console.log("2");
-        if (this.queue[0] == "trash") {
-          this.supportQueue.push(Math.floor(Math.random() * (4 - 1 + 1)) + 1);
-          this.queue.shift();
-          this.startGame();
+
+        if (el.className == "two_field") {
+          new Audio(this.sounds.two).play();
+          this.supportQueue.push(this.queue.shift());
+          this.supportQueue[this.supportQueue.length - 1] == 2
+            ? this.nextColor()
+            : this.loseGame();
         }
-      }
-      if (el.className == "three_field") {
-        let track = new Audio(
-          "http://soundbible.com/mp3/Electronic_Chime-KevanGC-495939803.mp3"
-        );
-        track.play();
-        this.supportQueue.push(this.queue.shift());
-        console.log(this.supportQueue);
-        console.log(this.queue);
-        if (this.supportQueue[this.supportQueue.length - 1] == 3)
-          console.log("3");
-        if (this.queue[0] == "trash") {
-          this.supportQueue.push(Math.floor(Math.random() * (4 - 1 + 1)) + 1);
-          this.queue.shift();
-          this.startGame();
+
+        if (el.className == "three_field") {
+          new Audio(this.sounds.three).play();
+          this.supportQueue.push(this.queue.shift());
+
+          this.supportQueue[this.supportQueue.length - 1] == 3
+            ? this.nextColor()
+            : this.loseGame();
         }
-      }
-      if (el.className == "four_field") {
-        let track = new Audio(
-          "http://soundbible.com/mp3/Elevator Ding-SoundBible.com-685385892.mp3"
-        );
-        track.play();
-        this.supportQueue.push(this.queue.shift());
-        console.log(this.supportQueue);
-        console.log(this.queue);
-        if (this.supportQueue[this.supportQueue.length - 1] == 4)
-          console.log("4");
-        if (this.queue[0] == "trash") {
-          this.supportQueue.push(Math.floor(Math.random() * (4 - 1 + 1)) + 1);
-          this.queue.shift();
-          this.startGame();
+
+        if (el.className == "four_field") {
+          new Audio(this.sounds.four).play();
+          this.supportQueue.push(this.queue.shift());
+          this.supportQueue[this.supportQueue.length - 1] == 4
+            ? this.nextColor()
+            : this.loseGame();
         }
+        
       }
+    },
+
+    nextColor() {
+      if (this.queue[0] == "trash") {
+        this.supportQueue.push(Math.floor(Math.random() * (4 - 1 + 1)) + 1);
+        this.queue.shift();
+        this.startGame();
+      }
+    },
+
+    loseGame() {
+      this.supportQueue = [];
+      this.queue = [];
+      this.supportQueue.push(Math.floor(Math.random() * (4 - 1 + 1)) + 1);
+      this.rounds = 0;
+      this.isGame = false;
+      this.isPlay = false;
+      this.gameOver = true;
+    },
+  },
+  computed: {
+    getDiff: function () {
+      if (this.mode == 1) return "Легкий";
+      if (this.mode == 2) return "Средний";
+      if (this.mode == 3) return "Сложный";
+      return true;
     },
   },
 };
@@ -171,6 +179,11 @@ export default {
   justify-content: center;
   flex-direction: column;
   align-items: center;
+}
+
+div{
+  font-size: 20pt;
+  margin-top: 10px;
 }
 
 .fields {
@@ -215,8 +228,22 @@ export default {
   opacity: 0.6;
 }
 
+form{
+  font-size: 14pt;
+}
+
 .stop_click {
   pointer-events: none;
+}
+
+.isGameNow{
+  pointer-events: none;
+  opacity: 0.4;
+}
+
+.loseGame{
+  color: red;
+  font-size: 20pt;
 }
 
 .one_field:active,
