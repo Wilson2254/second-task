@@ -148,18 +148,22 @@ export default {
       }
     },
 
+    // Проклик полей
     changeField(e) {
       var el = e.target;
 
-      if (this.queue.length) {
+      // Сморим началась ли игра
+      if (this.isGame) {
+
         if (el.className == "one_field") {
-          new Audio(this.sounds.one).play();
-          this.supportQueue.push(this.queue.shift());
-          this.supportQueue[this.supportQueue.length - 1] == 1
+          new Audio(this.sounds.one).play(); // Проигрываем характерный звук при нажатии на поле
+          this.supportQueue.push(this.queue.shift()); // Вытаскиваю первый элемент из основго массива и калду в дополнительный
+          this.supportQueue[this.supportQueue.length - 1] == 1 //Вызываю функции в зависимости от правильности нажатия на поле
             ? this.nextColor()
             : this.loseGame();
         }
 
+        //То же самое
         if (el.className == "two_field") {
           new Audio(this.sounds.two).play();
           this.supportQueue.push(this.queue.shift());
@@ -168,6 +172,7 @@ export default {
             : this.loseGame();
         }
 
+        //То же самое
         if (el.className == "three_field") {
           new Audio(this.sounds.three).play();
           this.supportQueue.push(this.queue.shift());
@@ -177,6 +182,7 @@ export default {
             : this.loseGame();
         }
 
+        //То же самое
         if (el.className == "four_field") {
           new Audio(this.sounds.four).play();
           this.supportQueue.push(this.queue.shift());
@@ -188,15 +194,18 @@ export default {
       }
     },
 
+    // Функция оконачания нажатий
     nextColor() {
-      if (this.queue[0] == "trash") {
-        this.supportQueue.push(Math.floor(Math.random() * (4 - 1 + 1)) + 1);
-        this.queue.shift();
-        this.startGame();
+      if (this.queue[0] == "trash") { //Если дошли до trash (он последний был в основном массиве)
+        this.supportQueue.push(Math.floor(Math.random() * (4 - 1 + 1)) + 1); //Генерю случаное значение, чтобы потом его добавить уже к проигранным полям
+        this.queue.shift(); //Удаляю trash
+        this.startGame();  //Запускаю проигрышь полей заново
       }
     },
 
+    // Функция проигрыша
     loseGame() {
+      // Очищаю все массивы и генерю случайное значение для первого поля
       this.supportQueue = [];
       this.queue = [];
       this.supportQueue.push(Math.floor(Math.random() * (4 - 1 + 1)) + 1);
@@ -206,6 +215,8 @@ export default {
       this.gameOver = true;
     },
   },
+
+  // В зависимости от номера сложности вывожу его название
   computed: {
     getDiff: function () {
       if (this.mode == 1) return "Легкий";
@@ -217,7 +228,10 @@ export default {
 };
 </script>
 
+
+
 <style scoped>
+
 .main {
   display: flex;
   justify-content: center;
@@ -236,13 +250,14 @@ div{
   width: 310px;
 }
 
+/* Расположение полей */
 .one_field,
 .two_field,
 .three_field,
 .four_field {
-  flex: 1 1 calc(33.33%); /* отнимем margin и скажем растягиваться */
+  flex: 1 1 calc(33.33%); 
   margin: 1px;
-  box-sizing: border-box; /* чтобы внутренний отступ не влиял когда там будет текст... */
+  box-sizing: border-box; 
   width: 150px;
   height: 150px;
   border: 1px solid;
@@ -276,6 +291,7 @@ form{
   font-size: 14pt;
 }
 
+/* Запрет на клик */
 .stop_click {
   pointer-events: none;
 }
@@ -290,6 +306,7 @@ form{
   font-size: 20pt;
 }
 
+/* Подсетвка при клике */
 .one_field:active,
 .two_field:active,
 .three_field:active,
@@ -298,6 +315,7 @@ form{
   opacity: 1;
 }
 
+/* При наведении */
 .one_field:hover,
 .two_field:hover,
 .three_field:hover,
@@ -311,6 +329,7 @@ form{
   text-align: center;
 }
 
+/* Кнопка старт */
 a.button8 {
   display: inline-block;
   font-weight: 700;
