@@ -1,29 +1,58 @@
 <template>
   <div class="main">
+
     <div>Саймон говорит</div>
+
+    <!-- Вывожу сообщение если игра закончена -->
     <div v-if="gameOver" class="loseGame">Вы проиграли</div>
+
+    <!-- Текущий рануд -->
     <div>Раунд: {{this.rounds}} </div>
+
+     <!-- Цветные поля -->
     <div class="fields">
+
+      <!-- На каждом поле стоят несколько классов -->
+      <!-- Первый класс отвечает за расположение и цвет (он есть всегда) -->
+      <!-- Второй класс подствечивает последнее загоревшееся поле (послдений элемент массива) -->
+      <!-- Третий класс запрещает пользователю кликать на поля, пока они проигрываются -->
+
+      <!-- Первое поле -->
       <div
-        :class="{one_field:true, field_choose:this.queue[queue.length-1] == 1, stop_click: isPlay}"
+        :class="{one_field: true, field_choose:this.queue[queue.length-1] == 1, stop_click: isPlay}"
         @click.prevent="changeField"
       ></div>
+
+      <!-- Второе поле -->
       <div
-        :class="{two_field:true, field_choose:this.queue[queue.length-1] == 2, stop_click: isPlay}"
+        :class="{two_field: true, field_choose:this.queue[queue.length-1] == 2, stop_click: isPlay}"
         @click="changeField"
       ></div>
+
+      <!-- Третье поле -->
       <div
-        :class="{three_field:true, field_choose:this.queue[queue.length-1] == 3, stop_click: isPlay}"
+        :class="{three_field: true, field_choose:this.queue[queue.length-1] == 3, stop_click: isPlay}"
         @click="changeField"
       ></div>
+
+      <!-- Четвертое поле -->
       <div
-        :class="{four_field:true, field_choose:this.queue[queue.length-1] == 4, stop_click: isPlay}"
+        :class="{four_field: true, field_choose:this.queue[queue.length-1] == 4, stop_click: isPlay}"
         @click="changeField"
       ></div>
+
     </div>
+
+    <!-- Блок выбора/показа сложности и кнопка, которая заускает игру -->
     <div class="controls">
+
+      <!-- Старт игры, класс запрещает с ней взаимодействовать, пока идет игра -->
       <a class="button8" @click="startGame" :class="{isGameNow: isGame}">Старт</a>
+
+      <!-- Показ текущей сложности (вычисляемое свойство, которое число переводит в строку) -->
       <div>Режим: {{getDiff}}</div>
+
+      <!-- Форма с кнопками для выбора сложности, класс запрещает с ней взаимодействовать, пока идет игра -->
       <div class="mode">
         <form :class="{isGameNow: isGame}">
           <input type="radio" value="1" name="modeChoose" v-model="mode" />
@@ -36,7 +65,9 @@
           <label for="hardMode">Сложный</label>
         </form>
       </div>
+      
     </div>
+
   </div>
 </template>
 
@@ -44,62 +75,75 @@
 export default {
   data() {
     return {
-      rounds: 0,
-      mode: 1,
-      queue: [],
-      supportQueue: [Math.floor(Math.random() * (4 - 1 + 1)) + 1],
-      isGame: false,
-      isPlay: false,
-      sounds: {
+      rounds: 0, //Текущий раунд
+      mode: 1, //Сложность игры
+      queue: [], //Массив, в котором находится порядок номеров полей
+      supportQueue: [Math.floor(Math.random() * (4 - 1 + 1)) + 1], //Вспомогательный массив для генерации следущего рандомного числа и для повторного проигрывания номеров полей
+      isGame: false, //Отключает кнопку Старт и выбор уровней сложности, пока идет игра
+      isPlay: false, //Отключает поля, когда они проигрываются
+      sounds: { //Звуки для проигрывания полей
         one: require("../sounds/1.mp3"),
         two: require("../sounds/2.mp3"),
         three: require("../sounds/3.mp3"),
         four: require("../sounds/4.mp3"),
       },
-      gameOver: false
+      gameOver: false //Поле для отображние поражения
     };
   },
   methods: {
     
+    //Функция вызывающаяся по кнопке Старт
     startGame() {
-      this.gameOver = false;
-      this.isGame = true;
-      this.isPlay = true;
-      this.rounds++;
-      setTimeout(() => this.playGame(), this.mode == 1 ? 1500  : this.mode == 2 ? 1000  : 400);
+      this.gameOver = false; //Отключаем отображние поражения
+      this.isGame = true; //Отключаем возможность кликать по кнопке Старт и по кнопкам выбора сложности
+      this.isPlay = true; //Отключаем возможность кликать по полям, пока они проигрываются
+      this.rounds++; //Новый раунд
+      setTimeout(() => this.playGame(), this.mode == 1 ? 1500  : this.mode == 2 ? 1000  : 400); //Вызываю функции раунда, в котором первое поле подсвечиваю с задержкой (в зависимости от сложности)
     },
 
+    // Функция раунда, в котором загораются поля
     playGame() {
-      let firstElem = this.supportQueue[0];
-      const some = this;
-      for (let i = 0; i < some.rounds; i++) {
+      let firstElem = this.supportQueue[0]; //Запоминаю первый элемент (потом вставлю его в начало массива, так как он затиратся)
+      const some = this; //Создаю текущий this так как контекст у анонимной функции будет другим
+      // Запускаю цикл, в котором буду подсвечивать по очереди из массива поля rounds раз
+      for (let i = 0; i < some.rounds; i++) { 
+        // Делаю промис, для создания анимации проигрывания
         new Promise(function (resolve) {
           setTimeout(
-            () => resolve(some.queue.push(some.supportQueue.shift())),
-            some.mode == 1 ? 1500 * i : some.mode == 2 ? 1000 * i : 400 * i
+            () => resolve(some.queue.push(some.supportQueue.shift())), // Через промежуток времени достаю из вспомогательного массива первый элемент и кладу его в основной
+            // Благодаря этому поля подсвечиваются в зависимости от номера, который последний находится в массиве
+            some.mode == 1 ? 1500 * i : some.mode == 2 ? 1000 * i : 400 * i //Задержка вывода следующего цвета зависит от сложности
           );
         })
+
+          // Блок для проигрыванию звука поля и для мигания поля
           .then(function () {
+            // Проигрываю звук поля
             if (some.queue[i] == 1) new Audio(some.sounds.one).play();
             if (some.queue[i] == 2) new Audio(some.sounds.two).play();
             if (some.queue[i] == 3) new Audio(some.sounds.three).play();
             if (some.queue[i] == 4) new Audio(some.sounds.four).play();
+            // Вызываю таймер в который пушу любое значение кроме 1-4 (у меня trash)
+            // Это для того, чтобы если будет повтор того же поля, можно было увидеть как оно загорается повторно
             setTimeout(
               () => some.queue.push("trash"),
               some.mode == 1 ? 700 : some.mode == 2 ? 400 : 200
             );
+            // Как только цикл прошел, я ставлю в начало первый элемент, который запомнил вначале (так как первый раз он затирается моим trash)
             if (i == some.rounds - 1) {
-              some.queue.splice(0, 0, firstElem);
-              some.isPlay = false;
+              some.queue.splice(0, 0, firstElem); //Вставляю в начало элемент
+              some.isPlay = false; //Теперь пользователь может протыкать порядок полей
             }
           })
+          
+          // Блок для создании анимации первого элемента, а также для удаления trash
           .then(function () {
             if (some.queue.length == 1) {
               setTimeout(
-                () => some.queue.splice(some.queue.indexOf("trash"), 1),
-                some.mode == 1 ? 650 : some.mode == 2 ? 350 : 150
+                () => some.queue.splice(some.queue.indexOf("trash"), 1), //Создаю эффект "мигания" для первого элемента
+                some.mode == 1 ? 650 : some.mode == 2 ? 350 : 150 //Задержка мигания зависит от сложности
               );
-            } else setTimeout(() => some.queue.splice(some.queue.indexOf("trash"), 1));
+            } else setTimeout(() => some.queue.splice(some.queue.indexOf("trash"), 1)); //Каждый раз удаляю trash из массива, чтобы он не копился
           });
       }
     },
